@@ -34,7 +34,6 @@ class MyServerCallbacks: public BLEServerCallbacks{
 };
 void setup() {
   Serial.begin(115200);
-  setCpuFrequencyMhz(80);
   // Create the BLE Device
   BLEDevice::init("baby deTech");
 
@@ -83,6 +82,8 @@ void loop() {
     int heatIndexInt = (int)(temperatureC);
     heatIndex.setValue(heatIndexInt);
     heatIndex.notify();
+    Serial.print("Heat index in C is: ");
+    Serial.println(heatIndexInt);
   }
   delay(1000);
   
