@@ -78,11 +78,13 @@ void setup() {
 }
 
 void loop() {
+  //Check FSR to see if baby is present, if not, go to deepsleep
   ADC_VALUE=analogRead(ADC_PIN);
   Serial.print("FSR VALUE = ");
   Serial.println(ADC_VALUE);
   if(ADC_VALUE<500)
     goToDeepSleep();
+  //Read temp and humidity, calculate heat index, and notify phone
   float humidity = dht.readHumidity();
   float temperatureC = dht.readTemperature();
   if (isnan(humidity) || isnan(temperatureC)) {
