@@ -4,8 +4,6 @@
 #include <BLE2902.h>
 #include "DHT.h"
 
-BLECharacteristic *pCharacteristic;
-
 bool deviceConnected = 0;
 #define ADC_PIN A0 //FSR pin, change as needed
 int ADC_VALUE = 0;
@@ -13,6 +11,7 @@ int ADC_VALUE = 0;
 #define SERVICE_UUID        "37fc19ab-98ca-4544-a68b-d183da78acdc"
 #define DHTPIN 4 //DHT22 pin change this to whatever pin you have connected
 #define DHTTYPE DHT22
+#define POWERPIN 13
 
 DHT dht(DHTPIN, DHTTYPE);
 BLECharacteristic heatIndex(BLEUUID((uint16_t)0x2A7A), BLECharacteristic::PROPERTY_READ|BLECharacteristic::PROPERTY_NOTIFY);
@@ -27,6 +26,8 @@ void goToDeepSleep(){
   Serial.print(SLEEP_TIME);
   Serial.println(" seconds");
   esp_sleep_enable_timer_wakeup(SLEEP_TIME*1000000);
+  //disable peripherals
+  digitalWrite(POWERPIN, LOW);
   esp_deep_sleep_start();
 }
 class MyCharacteristicCallbacks: public BLECharacteristicCallbacks {
@@ -41,7 +42,11 @@ class MyServerCallbacks: public BLEServerCallbacks{
   }
 };
 void setup() {
+  //initialize serial monitor
   Serial.begin(115200);
+  pinMode(POWERPIN, OUTPUT);
+  //Turn peripherals back on
+  digitalWrite(POWERPIN, HIGH);
   //Check FSR to see if baby is present, if not, go to deepsleep for 10 seconds
   ADC_VALUE=analogRead(ADC_PIN);
   Serial.print("FSR VALUE = ");
@@ -81,7 +86,6 @@ void setup() {
   //device address, min connection Interval*1.25ms max connection Interval*1.25ms, latency, timeout*10ms
   pServer->updateConnParams(*myAddress.getNative(),0x1000,0x1000,0,1000);
   //begin dht temperature sensor
-  
   dht.begin();
 }
 
