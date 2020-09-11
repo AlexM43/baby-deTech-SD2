@@ -9,7 +9,7 @@ BLECharacteristic *pCharacteristic;
 bool deviceConnected = 0;
 #define ADC_PIN A0 //FSR pin, change as needed
 int ADC_VALUE = 0;
-#define SLEEP_TIME 3
+#define SLEEP_TIME 10
 #define SERVICE_UUID        "37fc19ab-98ca-4544-a68b-d183da78acdc"
 #define DHTPIN 4 //DHT22 pin change this to whatever pin you have connected
 #define DHTTYPE DHT22
@@ -23,7 +23,9 @@ void goToLightSleep(){//not currently used
   esp_light_sleep_start();
 }
 void goToDeepSleep(){
-  Serial.println("Going to deep sleep");
+  Serial.print("Going to deep sleep for ");
+  Serial.print(SLEEP_TIME);
+  Serial.println(" seconds");
   esp_sleep_enable_timer_wakeup(SLEEP_TIME*1000000);
   esp_deep_sleep_start();
 }
@@ -40,6 +42,12 @@ class MyServerCallbacks: public BLEServerCallbacks{
 };
 void setup() {
   Serial.begin(115200);
+  //Check FSR to see if baby is present, if not, go to deepsleep for 10 seconds
+  ADC_VALUE=analogRead(ADC_PIN);
+  Serial.print("FSR VALUE = ");
+  Serial.println(ADC_VALUE);
+  if(ADC_VALUE<500)
+    goToDeepSleep();
   // Create the BLE Device
   BLEDevice::init("baby deTech");
 
@@ -78,7 +86,7 @@ void setup() {
 }
 
 void loop() {
-  //Check FSR to see if baby is present, if not, go to deepsleep
+  //Check FSR to see if baby is present, if not, go to deepsleep for 10 seconds
   ADC_VALUE=analogRead(ADC_PIN);
   Serial.print("FSR VALUE = ");
   Serial.println(ADC_VALUE);
