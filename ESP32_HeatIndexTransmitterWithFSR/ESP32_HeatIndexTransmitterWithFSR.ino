@@ -94,7 +94,7 @@ void loop() {
   ADC_VALUE=analogRead(ADC_PIN);
   Serial.print("FSR VALUE = ");
   Serial.println(ADC_VALUE);
-  if(ADC_VALUE<500)
+  if(ADC_VALUE<500)//Change this value(0-4095) to adjust pressure pad sensitivity. Lower value means more sensitive
     goToDeepSleep();
   //Read temp and humidity, calculate heat index, and notify phone
   float humidity = dht.readHumidity();
