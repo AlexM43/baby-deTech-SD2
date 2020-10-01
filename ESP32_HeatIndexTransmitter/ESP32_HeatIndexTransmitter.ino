@@ -3,6 +3,7 @@
 #include <BLEUtils.h>
 #include <BLE2902.h>
 #include "DHT.h"
+#include <sstream>
 
 BLECharacteristic *pCharacteristic;
 
@@ -12,9 +13,10 @@ bool deviceConnected = 0;
 #define SERVICE_UUID        "37fc19ab-98ca-4544-a68b-d183da78acdc"
 #define DHTPIN 4 //May need to change this to whatever pin you have connected
 #define DHTTYPE DHT22
-
+#define CHARACTERISTIC_UUID "2A7A"
 DHT dht(DHTPIN, DHTTYPE);
-BLECharacteristic heatIndex(BLEUUID((uint16_t)0x2A7A), BLECharacteristic::PROPERTY_READ|BLECharacteristic::PROPERTY_NOTIFY);
+//BLECharacteristic heatIndex(BLEUUID(, BLECharacteristic::PROPERTY_READ|BLECharacteristic::PROPERTY_NOTIFY);
+BLECharacteristic *heatIndex;
 int heatIndexDefault = 80;
 void goToLightSleep(){//not currently used
   Serial.println("Going to sleep");
@@ -45,9 +47,15 @@ void setup() {
   pServer->setCallbacks(new MyServerCallbacks());
 
   // Create a BLE Characteristic and set Callbacks
-  pService->addCharacteristic(&heatIndex);
-  heatIndex.setCallbacks(new MyCharacteristicCallbacks());
-  heatIndex.addDescriptor(new BLE2902()); //This enables notifications on the client side
+  heatIndex = pService->createCharacteristic(
+                                         CHARACTERISTIC_UUID,
+                                         BLECharacteristic::PROPERTY_READ |
+                                         BLECharacteristic::PROPERTY_WRITE |
+                                         BLECharacteristic::PROPERTY_NOTIFY
+                                       );
+  pService->addCharacteristic(heatIndex);
+  heatIndex->setCallbacks(new MyCharacteristicCallbacks());
+  heatIndex->addDescriptor(new BLE2902()); //This enables notifications on the client side
 
   pServer->getAdvertising()->addServiceUUID(SERVICE_UUID);
 
@@ -60,7 +68,7 @@ void setup() {
   pServer->getAdvertising()->setMaxInterval(0x100);
   pServer->getAdvertising()->start();
   //sets default heat index
-  heatIndex.setValue(heatIndexDefault);
+  heatIndex->setValue(heatIndexDefault);
 
   //Set connection parameters
   BLEAddress myAddress = BLEDevice::getAddress();
@@ -80,8 +88,10 @@ void loop() {
   else{
     float heatIndexVal = dht.computeHeatIndex(temperatureC,humidity, 0);
     int heatIndexInt = (int)(temperatureC);
-    heatIndex.setValue(heatIndexInt);
-    heatIndex.notify();
+    std::stringstream ss;
+    ss<<heatIndexInt;
+    heatIndex->setValue(ss.str());
+    heatIndex->notify();
     Serial.print("Heat index in C is: ");
     Serial.println(heatIndexInt);
   }
