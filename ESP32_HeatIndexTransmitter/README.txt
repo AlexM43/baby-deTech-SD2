@@ -5,3 +5,4 @@ Use with nrfConnect app, must connect to device then look under "Unknown Service
 Set baud rate to 115200 in the Serial Monitor 
 Fixed the "Failed to read temperature error" that kept occurring
 Also need to implement sleep modes, might not be possible with Arduino IDE, may need to use ESP-IDF
+To measure battery level and get low battery warnings, connect a 1/2 voltage divider between VIN/USB and ground with the midpoint between the two resistors connected to pin 13
