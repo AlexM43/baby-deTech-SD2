@@ -7,6 +7,8 @@
 bool deviceConnected = 0;
 #define ADC_PIN A0 //FSR pin, change as needed
 int ADC_VALUE = 0;
+#define VMEASURE_PIN 39//Pin used to measure input voltage for battery life considerations
+int VMEASURE = 0;
 #define SLEEP_TIME 10
 #define SERVICE_UUID        "37fc19ab-98ca-4544-a68b-d183da78acdc"
 #define DHTPIN 4 //DHT22 pin change this to whatever pin you have connected
@@ -15,6 +17,7 @@ int ADC_VALUE = 0;
 
 DHT dht(DHTPIN, DHTTYPE);
 BLECharacteristic heatIndex(BLEUUID((uint16_t)0x2A7A), BLECharacteristic::PROPERTY_READ|BLECharacteristic::PROPERTY_NOTIFY);
+BLECharacteristic batteryLevel(BLEUUID((uint16_t)0x2A19), BLECharacteristic::PROPERTY_READ|BLECharacteristic::PROPERTY_NOTIFY);
 int heatIndexDefault = 80;
 void goToLightSleep(){//not currently used
   Serial.println("Going to light sleep");
@@ -67,6 +70,11 @@ void setup() {
   pService->addCharacteristic(&heatIndex);
   heatIndex.setCallbacks(new MyCharacteristicCallbacks());
   heatIndex.addDescriptor(new BLE2902()); //This enables notifications on the client side
+  
+  // Create a BLE Characteristic and set Callbacks
+  pService->addCharacteristic(&batteryLevel);
+  batteryLevel.setCallbacks(new MyCharacteristicCallbacks());
+  batteryLevel.addDescriptor(new BLE2902()); //This enables notifications on the client side
 
   pServer->getAdvertising()->addServiceUUID(SERVICE_UUID);
 
@@ -90,12 +98,33 @@ void setup() {
 }
 
 void loop() {
+  //Read voltage level of VIN/USB pin
+  VMEASURE=analogRead(VMEASURE_PIN);
+  double InputVoltage=(double)VMEASURE/3200.0*2.0*2.7+0.1;
+  Serial.print("Input voltage in volts = ");
+  Serial.println(InputVoltage);
+  Serial.print("Raw input voltage = ");
+  Serial.println(VMEASURE);
+  if(VMEASURE<2300)
+    Serial.println("Battery life is low.");
   //Check FSR to see if baby is present, if not, go to deepsleep for 10 seconds
   ADC_VALUE=analogRead(ADC_PIN);
   Serial.print("FSR VALUE = ");
   Serial.println(ADC_VALUE);
   if(ADC_VALUE<500)//Change this value(0-4095) to adjust pressure pad sensitivity. Lower value means more sensitive
     goToDeepSleep();
+  //Notify battery level, only two states, 100 if battery level is good-okay or 0 if battery life is low
+  int batteryLife;
+  if(VMEASURE<2300){
+    batteryLife=0;
+    batteryLevel.setValue(batteryLife);
+    batteryLevel.notify();
+  }
+  else{
+    batteryLife=100;
+    batteryLevel.setValue(batteryLife);
+    batteryLevel.notify();
+  }
   //Read temp and humidity, calculate heat index, and notify phone
   float humidity = dht.readHumidity();
   float temperatureC = dht.readTemperature();
