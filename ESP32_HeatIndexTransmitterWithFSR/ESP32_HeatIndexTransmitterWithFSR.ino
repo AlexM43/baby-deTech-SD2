@@ -3,6 +3,7 @@
 #include <BLEUtils.h>
 #include <BLE2902.h>
 #include "DHT.h"
+#include <sstream>
 
 bool deviceConnected = 0;
 #define ADC_PIN A0 //FSR pin, change as needed
@@ -18,6 +19,8 @@ int VMEASURE = 0;
 DHT dht(DHTPIN, DHTTYPE);
 BLECharacteristic heatIndex(BLEUUID((uint16_t)0x2A7A), BLECharacteristic::PROPERTY_READ|BLECharacteristic::PROPERTY_NOTIFY);
 BLECharacteristic batteryLevel(BLEUUID((uint16_t)0x2A19), BLECharacteristic::PROPERTY_READ|BLECharacteristic::PROPERTY_NOTIFY);
+BLECharacteristic temperatureCharacteristic(BLEUUID((uint16_t)0x2A1F), BLECharacteristic::PROPERTY_READ|BLECharacteristic::PROPERTY_NOTIFY);
+BLECharacteristic humidityCharacteristic(BLEUUID((uint16_t)0x2A6F), BLECharacteristic::PROPERTY_READ|BLECharacteristic::PROPERTY_NOTIFY);
 int heatIndexDefault = 80;
 void goToLightSleep(){//not currently used
   Serial.println("Going to light sleep");
@@ -76,6 +79,16 @@ void setup() {
   batteryLevel.setCallbacks(new MyCharacteristicCallbacks());
   batteryLevel.addDescriptor(new BLE2902()); //This enables notifications on the client side
 
+   // Create a BLE Characteristic and set Callbacks
+  pService->addCharacteristic(&temperatureCharacteristic);
+  temperatureCharacteristic.setCallbacks(new MyCharacteristicCallbacks());
+  temperatureCharacteristic.addDescriptor(new BLE2902()); //This enables notifications on the client side
+
+   // Create a BLE Characteristic and set Callbacks
+  pService->addCharacteristic(&humidityCharacteristic);
+  humidityCharacteristic.setCallbacks(new MyCharacteristicCallbacks());
+  humidityCharacteristic.addDescriptor(new BLE2902()); //This enables notifications on the client side
+
   pServer->getAdvertising()->addServiceUUID(SERVICE_UUID);
 
   // Start the service
@@ -115,16 +128,14 @@ void loop() {
     goToDeepSleep();
   //Notify battery level, only two states, 100 if battery level is good-okay or 0 if battery life is low
   int batteryLife;
-  if(VMEASURE<2300){
+  if(VMEASURE<2300)
     batteryLife=0;
-    batteryLevel.setValue(batteryLife);
-    batteryLevel.notify();
-  }
-  else{
+  else
     batteryLife=100;
-    batteryLevel.setValue(batteryLife);
-    batteryLevel.notify();
-  }
+  std::stringstream ss;
+  ss<<batteryLife;  
+  batteryLevel.setValue(ss.str());
+  batteryLevel.notify();
   //Read temp and humidity, calculate heat index, and notify phone
   float humidity = dht.readHumidity();
   float temperatureC = dht.readTemperature();
@@ -133,11 +144,25 @@ void loop() {
   }
   else{
     float heatIndexVal = dht.computeHeatIndex(temperatureC,humidity, 0);
-    int heatIndexInt = (int)(temperatureC);
-    heatIndex.setValue(heatIndexInt);
+    int heatIndexInt = (int)(heatIndexVal);
+    ss.str("");
+    ss<<heatIndexInt;
+    heatIndex.setValue(ss.str());
     heatIndex.notify();
     Serial.print("Heat index in C is: ");
-    Serial.println(heatIndexInt);
+    Serial.println(ss.str().c_str());
+    ss.str("");
+    ss<<temperatureC;
+    temperatureCharacteristic.setValue(ss.str());
+    temperatureCharacteristic.notify();
+    Serial.print("Temperature in C is: ");
+    Serial.println(ss.str().c_str());
+    ss.str("");
+    ss<<humidity;
+    humidityCharacteristic.setValue(ss.str());
+    humidityCharacteristic.notify();
+    Serial.print("Humidity is: ");
+    Serial.println(ss.str().c_str());
   }
   delay(1000);
   
