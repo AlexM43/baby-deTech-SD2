@@ -6,8 +6,12 @@
 #include <sstream>
 
 bool deviceConnected = 0;
-#define ADC_PIN A0 //FSR pin, change as needed
-int ADC_VALUE = 0;
+#define ADC_PIN0 A0 //FSR pin, change as needed
+int ADC_VALUE0 = 0;
+#define ADC_PIN1 25 //2nd FSR Pin
+int ADC_VALUE1 = 0;
+#define ADC_PIN2 34 //3rd FSR Pin
+int ADC_VALUE2 = 0;
 #define VMEASURE_PIN 39//Pin used to measure input voltage for battery life considerations
 int VMEASURE = 0;
 #define SLEEP_TIME 10
@@ -54,11 +58,17 @@ void setup() {
   //Turn peripherals back on
   digitalWrite(POWERPIN, HIGH);
   //Check FSR to see if baby is present, if not, go to deepsleep for 10 seconds
-  ADC_VALUE=analogRead(ADC_PIN);
-  Serial.print("FSR VALUE = ");
-  Serial.println(ADC_VALUE);
-  //if(ADC_VALUE<500)
-    //goToDeepSleep();
+  ADC_VALUE0=analogRead(ADC_PIN0);
+  ADC_VALUE1=analogRead(ADC_PIN1);
+  ADC_VALUE2=analogRead(ADC_PIN2);
+  Serial.print("FSR0 VALUE = ");
+  Serial.println(ADC_VALUE0);
+  Serial.print("FSR1 VALUE = ");
+  Serial.println(ADC_VALUE1);
+  Serial.print("FSR2 VALUE = ");
+  Serial.println(ADC_VALUE2);
+  if( (ADC_VALUE0<50) || (ADC_VALUE1<50) || (ADC_VALUE2<50) )
+    goToDeepSleep();
   // Create the BLE Device
   BLEDevice::init("baby deTech");
 
@@ -121,18 +131,24 @@ void loop() {
   if(VMEASURE<2300)
     Serial.println("Battery life is low.");
   //Check FSR to see if baby is present, if not, go to deepsleep for 10 seconds
-  ADC_VALUE=analogRead(ADC_PIN);
-  Serial.print("FSR VALUE = ");
-  Serial.println(ADC_VALUE);
-  //if(ADC_VALUE<500)//Change this value(0-4095) to adjust pressure pad sensitivity. Lower value means more sensitive
-    //goToDeepSleep();
+  ADC_VALUE0=analogRead(ADC_PIN0);
+  ADC_VALUE1=analogRead(ADC_PIN1);
+  ADC_VALUE2=analogRead(ADC_PIN2);
+  Serial.print("FSR0 VALUE = ");
+  Serial.println(ADC_VALUE0);
+  Serial.print("FSR1 VALUE = ");
+  Serial.println(ADC_VALUE1);
+  Serial.print("FSR2 VALUE = ");
+  Serial.println(ADC_VALUE2);
+  if( (ADC_VALUE0<50) || (ADC_VALUE1<50) || (ADC_VALUE2<50) )//Change this value(0-4095) to adjust pressure pad sensitivity. Lower value means more sensitive
+    goToDeepSleep();
   //Notify battery level, only two states, 100 if battery level is good-okay or 0 if battery life is low
   int batteryLife;
   if(VMEASURE<2300)
     batteryLife=0;
   else
     batteryLife=100;
-  std::stringstream ss; 
+  std::stringstream ss;
   ss<<batteryLife;  
   batteryLevel.setValue(ss.str());
   batteryLevel.notify();

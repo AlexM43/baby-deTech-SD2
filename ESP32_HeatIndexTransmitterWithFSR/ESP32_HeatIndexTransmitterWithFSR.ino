@@ -57,7 +57,7 @@ void setup() {
   ADC_VALUE=analogRead(ADC_PIN);
   Serial.print("FSR VALUE = ");
   Serial.println(ADC_VALUE);
-  if(ADC_VALUE<500)
+  if(ADC_VALUE<50)
     goToDeepSleep();
   // Create the BLE Device
   BLEDevice::init("baby deTech");
@@ -124,7 +124,7 @@ void loop() {
   ADC_VALUE=analogRead(ADC_PIN);
   Serial.print("FSR VALUE = ");
   Serial.println(ADC_VALUE);
-  if(ADC_VALUE<500)//Change this value(0-4095) to adjust pressure pad sensitivity. Lower value means more sensitive
+  if(ADC_VALUE<50)//Change this value(0-4095) to adjust pressure pad sensitivity. Lower value means more sensitive
     goToDeepSleep();
   //Notify battery level, only two states, 100 if battery level is good-okay or 0 if battery life is low
   int batteryLife;
