@@ -6,7 +6,7 @@
 #include <sstream>
 
 bool deviceConnected = 0;
-#define ADC_PIN A0 //FSR pin, change as needed
+#define ADC_PIN 32 //FSR pin, change as needed
 int ADC_VALUE = 0;
 #define VMEASURE_PIN 39//Pin used to measure input voltage for battery life considerations
 int VMEASURE = 0;
