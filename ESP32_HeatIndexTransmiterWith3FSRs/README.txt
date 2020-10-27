@@ -1,7 +1,7 @@
 Device notifies phone of heat index every second, but only if the FSR detects pressure.
 DHT22 must be hooked up to pin 4 by default, A5 on the Huzzah feather
-FSR0 is hooked up to A0 by default
-FSR1 is hooked up to GPIO 25 by default
+FSR0 is hooked up to 32 by default
+FSR1 is hooked up to GPIO 33 by default
 FSR2 is hooked up to GPIO 34 by default
 You can hook up both the DHT22 and FSR to pin 13 instead of the 3.3v pin. This saves power during sleep mode since I can shut the power off by driving the pin low.
 Check https://randomnerdtutorials.com/esp32-dht11-dht22-temperature-humidity-sensor-arduino-ide/ for info how to hook up DHT22/configure DHT22 libraries.

@@ -6,9 +6,9 @@
 #include <sstream>
 
 bool deviceConnected = 0;
-#define ADC_PIN0 A0 //FSR pin, change as needed
+#define ADC_PIN0 32 //FSR pin, change as needed
 int ADC_VALUE0 = 0;
-#define ADC_PIN1 25 //2nd FSR Pin
+#define ADC_PIN1 33 //2nd FSR Pin
 int ADC_VALUE1 = 0;
 #define ADC_PIN2 34 //3rd FSR Pin
 int ADC_VALUE2 = 0;
