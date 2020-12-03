@@ -53,21 +53,7 @@ class MyServerCallbacks: public BLEServerCallbacks{
 void setup() {
   //initialize serial monitor
   Serial.begin(115200);
-  pinMode(POWERPIN, OUTPUT);
-  //Turn peripherals back on
-  digitalWrite(POWERPIN, HIGH);
-  //Check FSR to see if baby is present, if not, go to deepsleep for 10 seconds
-  ADC_VALUE0=analogRead(ADC_PIN0);
-  ADC_VALUE1=analogRead(ADC_PIN1);
-  ADC_VALUE2=analogRead(ADC_PIN2);
-  Serial.print("FSR0 VALUE = ");
-  Serial.println(ADC_VALUE0);
-  Serial.print("FSR1 VALUE = ");
-  Serial.println(ADC_VALUE1);
-  Serial.print("FSR2 VALUE = ");
-  Serial.println(ADC_VALUE2);
-  if( (ADC_VALUE0<50) && (ADC_VALUE1<50) && (ADC_VALUE2<50) )
-    goToDeepSleep();
+
   // Create the BLE Device
   BLEDevice::init("baby deTech");
 
@@ -118,49 +104,13 @@ void setup() {
   //begin dht temperature sensor
   dht.begin();
 }
-
 void loop() {
-  //Check FSR to see if baby is present, if not, go to deepsleep for 10 seconds
-  ADC_VALUE0=analogRead(ADC_PIN0);
-  ADC_VALUE1=analogRead(ADC_PIN1);
-  ADC_VALUE2=analogRead(ADC_PIN2);
-  Serial.print("FSR0 VALUE = ");
-  Serial.println(ADC_VALUE0);
-  Serial.print("FSR1 VALUE = ");
-  Serial.println(ADC_VALUE1);
-  Serial.print("FSR2 VALUE = ");
-  Serial.println(ADC_VALUE2);
-  if( (ADC_VALUE0<50) && (ADC_VALUE1<50) && (ADC_VALUE2<50) )//Change this value(0-4095) to adjust pressure pad sensitivity. Lower value means more sensitive
-    goToDeepSleep();
+  // put your main code here, to run repeatedly:
   std::stringstream ss;
-  //Read temp and humidity, calculate heat index, and notify phone
-  float humidity = dht.readHumidity();
-  float temperatureC = dht.readTemperature();
-  if (isnan(humidity) || isnan(temperatureC)) {
-    Serial.println("Failed to read from DHT sensor!");
-  }
-  else{
-    float heatIndexVal = dht.computeHeatIndex(temperatureC,humidity, 0);
-    int heatIndexInt = (int)(heatIndexVal);
-    ss.str("");
-    ss<<heatIndexInt;
-    heatIndex.setValue(ss.str());
-    heatIndex.notify();
-    Serial.print("Heat index in C is: ");
-    Serial.println(ss.str().c_str());
-    ss.str("");
-    ss<<temperatureC;
-    temperatureCharacteristic.setValue(ss.str());
-    temperatureCharacteristic.notify();
-    Serial.print("Temperature in C is: ");
-    Serial.println(ss.str().c_str());
-    ss.str("");
-    ss<<humidity;
-    humidityCharacteristic.setValue(ss.str());
-    humidityCharacteristic.notify();
-    Serial.print("Humidity is: ");
-    Serial.println(ss.str().c_str());
-  }
+  ss<<70;
+  Serial.print("Heat index in C is: ");
+  Serial.println(ss.str().c_str());
+  heatIndex.setValue(ss.str());
+  heatIndex.notify();
   delay(1000);
-  
 }
