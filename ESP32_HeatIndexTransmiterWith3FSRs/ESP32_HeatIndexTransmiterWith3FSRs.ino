@@ -12,8 +12,7 @@ int ADC_VALUE0 = 0;
 int ADC_VALUE1 = 0;
 #define ADC_PIN2 34 //3rd FSR Pin
 int ADC_VALUE2 = 0;
-#define VMEASURE_PIN 39//Pin used to measure input voltage for battery life considerations
-int VMEASURE = 0;
+
 #define SLEEP_TIME 10
 #define SERVICE_UUID        "37fc19ab-98ca-4544-a68b-d183da78acdc"
 #define DHTPIN 4 //DHT22 pin change this to whatever pin you have connected
@@ -121,15 +120,6 @@ void setup() {
 }
 
 void loop() {
-  //Read voltage level of VIN/USB pin
-  VMEASURE=analogRead(VMEASURE_PIN);
-  double InputVoltage=(double)VMEASURE/3200.0*2.0*2.7+0.1;
-  Serial.print("Input voltage in volts = ");
-  Serial.println(InputVoltage);
-  Serial.print("Raw input voltage = ");
-  Serial.println(VMEASURE);
-  if(VMEASURE<2300)
-    Serial.println("Battery life is low.");
   //Check FSR to see if baby is present, if not, go to deepsleep for 10 seconds
   ADC_VALUE0=analogRead(ADC_PIN0);
   ADC_VALUE1=analogRead(ADC_PIN1);
@@ -142,16 +132,7 @@ void loop() {
   Serial.println(ADC_VALUE2);
   if( (ADC_VALUE0<50) && (ADC_VALUE1<50) && (ADC_VALUE2<50) )//Change this value(0-4095) to adjust pressure pad sensitivity. Lower value means more sensitive
     goToDeepSleep();
-  //Notify battery level, only two states, 100 if battery level is good-okay or 0 if battery life is low
-  int batteryLife;
-  if(VMEASURE<2300)
-    batteryLife=0;
-  else
-    batteryLife=100;
   std::stringstream ss;
-  ss<<batteryLife;  
-  batteryLevel.setValue(ss.str());
-  batteryLevel.notify();
   //Read temp and humidity, calculate heat index, and notify phone
   float humidity = dht.readHumidity();
   float temperatureC = dht.readTemperature();
